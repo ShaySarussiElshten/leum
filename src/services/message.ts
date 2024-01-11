@@ -1,34 +1,40 @@
 import { MongoDBDAO } from '@gateway/dao/message';
+import { ErrorMessage } from '@gateway/enum';
 import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 
+
+const COLLECTION_NAME = 'messages';
+const DB_NAME = 'myDbName';
+
 class MessageService {
-  private collectionName: string;
+
   private mongoDBDAO: MongoDBDAO | null = null;
 
-  constructor(collectionName: string){
-    this.collectionName = collectionName;
-    this.mongoDBDAO = new MongoDBDAO(this.collectionName);
+  constructor(mongoDBDAO: MongoDBDAO) {
+    this.mongoDBDAO = mongoDBDAO;
   }
 
-  async initialize(): Promise<void> {
+  public async initializeDb(): Promise<void> {
     if (this.mongoDBDAO) {
-      await this.mongoDBDAO.initialize();
+      await this.mongoDBDAO.initialize(DB_NAME);
     } else {
-      throw new Error('MongoDBDAO is not initialized');
+      throw new Error(ErrorMessage.MONGO_NOT_INIT);
     }
   }
 
-  async getMessageById(id: string): Promise<string> {
-    return `${id}%%%%%%%%%`; 
+  public async getMessageById(id: string): Promise<string> {
+    return `${id}%%%%%%%%%`;
   }
 
-  async getAllMessages(req: Request, res: Response): Promise<void> {
+  public async getAllMessages(req: Request, res: Response): Promise<void> {
     res.status(StatusCodes.OK).json({ message: [] });
   }
 }
 
-export const messageService = new MessageService('messages');
-messageService.initialize();
+export const messageService = new MessageService(
+  new MongoDBDAO(COLLECTION_NAME),
+);
+messageService.initializeDb();
 
 
