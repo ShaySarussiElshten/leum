@@ -15,6 +15,9 @@ import { isAxiosError } from 'axios';
 import { CustomError, IErrorResponse } from '@gateway/general-utils/error-handler';
 import { appRoutes } from '@gateway/app-routes';
 import { Enviroments, ServerConfig, ServerMessage, MethodsAPI, LogLevel } from '@gateway/enum';
+import swaggerUi from 'swagger-ui-express';
+import swaggerJSDoc from 'swagger-jsdoc';
+
 
 export const SERVER_PORT = 4000;
 const DEFAULT_ERROR_CODE = 500;
@@ -32,6 +35,7 @@ export class Server {
   public start(): void {
     this.securityMiddleware(this.app);
     this.standardMiddleware(this.app);
+    this.swaggerConfig(this.app);
     this.routesMiddleware(this.app);
     this.errorHandler(this.app);
     this.startServer(this.app);
@@ -79,6 +83,55 @@ export class Server {
   private routesMiddleware(app: Application): void {
     appRoutes(app);
   }
+
+  private swaggerConfig = (app: Application): void => {
+    const options = {
+      definition: {
+        openapi: '3.0.0',
+        
+        info: {
+          title: 'My API',
+          version: '1.0.0',
+        },
+        components: {
+          schemas: {
+            Message: {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'integer',
+                  example: 1,
+                },
+                name: {
+                  type: 'string',
+                  example: 'John Doe',
+                },
+                age: {
+                  type: 'integer',
+                  example: 30,
+                },
+                content: {
+                  type: 'string',
+                  example: 'Hello, World!',
+                },
+              },
+            },
+          },
+        },
+        
+      },
+      // Path to the API docs
+      apis: ['./src/controller/*.ts'], // change this path to where your route files are
+    };
+
+    const swaggerSpec = swaggerJSDoc(options);
+
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+    console.log(JSON.stringify(swaggerSpec, null, 2));
+
+
+  };
  
 
   private errorHandler(app: Application): void {
