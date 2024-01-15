@@ -4,25 +4,19 @@ import 'express-async-errors';
 import { winstonLogger } from '@gateway/general-utils/logger';
 import { Application, Request, Response, json, urlencoded, NextFunction } from 'express';
 import { Logger } from 'winston';
-import cookieSession from 'cookie-session';
-import cors from 'cors';
-import hpp from 'hpp';
-import helmet from 'helmet';
 import compression from 'compression';
-import { StatusCodes } from 'http-status-codes';
 import { config } from '@gateway/config';
-import { isAxiosError } from 'axios';
-import { CustomError, IErrorResponse } from '@gateway/general-utils/error-handler';
 import { appRoutes } from '@gateway/app-routes';
-import { Enviroments, ServerConfig, ServerMessage, MethodsAPI, LogLevel } from '@gateway/enum';
-import swaggerUi from 'swagger-ui-express';
-import swaggerJSDoc from 'swagger-jsdoc';
+import {  ServerConfig, ServerMessage, LogLevel } from '@gateway/enum';
+import { securityMiddleware } from '@gateway/configuration/security';
+import { swaggerConfiguration } from '@gateway/configuration/swagger';
+import { errorHandler } from '@gateway/configuration/errorHandler';
 
 
 export const SERVER_PORT = 4000;
-const DEFAULT_ERROR_CODE = 500;
-const SERVER_NAME = 'GatewayService';
-const log: Logger = winstonLogger(`${config.ELASTIC_SEARCH_URL}`, 'apiGatewayServer', 'debug');
+export const DEFAULT_ERROR_CODE = 500;
+export const SERVER_NAME = 'GatewayService';
+export const log: Logger = winstonLogger(`${config.ELASTIC_SEARCH_URL}`, 'apiGatewayServer', 'debug');
 
 
 export class Server {
@@ -33,7 +27,7 @@ export class Server {
   }
 
   public start(): void {
-    this.securityMiddleware(this.app);
+    this.security(this.app);
     this.standardMiddleware(this.app);
     this.swaggerConfig(this.app);
     this.routesMiddleware(this.app);
@@ -41,32 +35,8 @@ export class Server {
     this.startServer(this.app);
   }
 
-  private securityMiddleware(app: Application): void {
-    app.set('trust proxy', 1);
-    app.use(
-      cookieSession({
-        name: 'session',
-        keys: [''],
-        maxAge: 24 * 7 * 3600000,
-        secure: config.NODE_ENV !== Enviroments.DEVELOPMENT,
-        ...(config.NODE_ENV !== Enviroments.DEVELOPMENT && {
-          sameSite: 'none',
-        }),
-      }),
-    );
-    app.use(hpp());
-    app.use(helmet());
-    app.use(cors({
-      origin: config.CLIENT_URL,
-      credentials: true,
-      methods: [
-        MethodsAPI.GET,
-        MethodsAPI.POST,
-        MethodsAPI.PUT,
-        MethodsAPI.DELETE,
-        MethodsAPI.OPTIONS,
-      ],
-    }));
+  private security(app: Application): void {
+    securityMiddleware(app)
 
     app.use((req: Request, _res: Response, next: NextFunction) => {
       //if (req.session?.jwt) {}
@@ -85,77 +55,13 @@ export class Server {
   }
 
   private swaggerConfig = (app: Application): void => {
-    const options = {
-      definition: {
-        openapi: '3.0.0',
-        
-        info: {
-          title: 'My API',
-          version: '1.0.0',
-        },
-        components: {
-          schemas: {
-            Message: {
-              type: 'object',
-              properties: {
-                id: {
-                  type: 'integer',
-                  example: 1,
-                },
-                name: {
-                  type: 'string',
-                  example: 'John Doe',
-                },
-                age: {
-                  type: 'integer',
-                  example: 30,
-                },
-                content: {
-                  type: 'string',
-                  example: 'Hello, World!',
-                },
-              },
-            },
-          },
-        },
-        
-      },
-      // Path to the API docs
-      apis: ['./src/controller/*.ts'], // change this path to where your route files are
-    };
-
-    const swaggerSpec = swaggerJSDoc(options);
-
-    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-    console.log(JSON.stringify(swaggerSpec, null, 2));
-
+     swaggerConfiguration(app)
 
   };
  
 
   private errorHandler(app: Application): void {
-    app.use('*', (req: Request, res: Response, next: NextFunction) => {
-      const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
-      log.log(LogLevel.ERROR, `${fullUrl} ${ServerMessage.ENDPOINT_NOT_EXIST}`, '');
-      res.status(StatusCodes.NOT_FOUND).json({ message: `${fullUrl} ${ServerMessage.ENDPOINT_NOT_EXIST}` });
-      next();
-    });
-
-    app.use((error: IErrorResponse, _req: Request, res: Response, next: NextFunction) => {
-      if (error instanceof CustomError) {
-        log.log(LogLevel.ERROR, `${SERVER_NAME} ${error.comingFrom}:`, error);
-        res.status(error.statusCode).json(error.serializeErrors());
-      }
-
-      if (isAxiosError(error)) {
-        log.log(LogLevel.ERROR, `${SERVER_NAME} Axios Error - ${error?.response?.data?.comingFrom}:`, error);
-        res.status(error?.response?.data?.statusCode ??
-          DEFAULT_ERROR_CODE).json({ message: error?.response?.data?.message ?? ServerMessage.GENERAL_ERROR });
-      }
-
-      next();
-    });
+     errorHandler(app)
   }
 
   private async startServer(app: Application): Promise<void> {
@@ -180,3 +86,5 @@ export class Server {
   }
 
 }
+
+
