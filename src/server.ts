@@ -8,9 +8,9 @@ import compression from 'compression';
 import { config } from '@gateway/config';
 import { appRoutes } from '@gateway/app-routes';
 import {  ServerConfig, ServerMessage, LogLevel } from '@gateway/enum';
-import { securityMiddleware } from '@gateway/configuration/security';
-import { swaggerConfiguration } from '@gateway/configuration/swagger';
-import { errorHandler } from '@gateway/configuration/errorHandler';
+import { securityMiddleware } from '@gateway/server-configuration/security';
+import { swaggerConfiguration } from '@gateway/server-configuration/swagger';
+import { errorHandler } from '@gateway/server-configuration/errorHandler';
 
 
 export const SERVER_PORT = 4000;
