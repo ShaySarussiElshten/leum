@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import { messageService } from '@gateway/services/message';
 import { messageController } from '@gateway/controller/message';
 import { StatusCodes } from 'http-status-codes';
+import {expect, jest} from '@jest/globals';
+
+
 
 jest.mock('@gateway/services/message', () => ({
   messageService: {
@@ -21,7 +24,7 @@ describe('MessageController', () => {
         json: jest.fn()
       } as unknown as Response;
 
-      const mockMessage = { id: '123', content: 'Hello' };
+      const mockMessage = { id: '123', content: 'Hello' } as never;
       (messageService.getMessageById as jest.Mock).mockResolvedValue(mockMessage);
 
       await messageController.getMessageById(mockRequest, mockResponse);

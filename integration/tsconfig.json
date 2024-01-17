@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "module": "commonjs",
+    "target": "es5",
+    "lib": ["es5", "dom"],
+    "types": ["cypress"],
+    "sourceMap": false,     // Explicitly disable sourceMap
+    "inlineSourceMap": true, // Optional, enable if you want inline source maps
+    "noEmit": true          // Prevent emitting .js files
+  },
+  "include": ["**/*.ts"]
+}
