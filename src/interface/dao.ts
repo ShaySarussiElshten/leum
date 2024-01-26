@@ -1,4 +1,4 @@
-import { Db, ObjectId } from 'mongodb';
+import { ObjectId } from 'mongodb';
 
 export interface IDAO {
   insertOne(document: object): Promise<ObjectId>;

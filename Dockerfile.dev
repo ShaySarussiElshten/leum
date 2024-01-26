@@ -1,0 +1,22 @@
+FROM node:16-alpine
+
+# Install curl to download the wait-for script
+RUN apk add --no-cache curl
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+# Download the wait-for script and give it the necessary permissions
+ADD https://raw.githubusercontent.com/eficode/wait-for/v2.2.3/wait-for /wait-for
+RUN chmod +x /wait-for
+
+COPY . .
+
+EXPOSE 4000
+
+# Define the command to start the application
+# Replace `elasticsearch:9200` with the service and port you are waiting for
+CMD ["/wait-for", "elasticsearch:9200", "--", "npm", "run", "dev"]

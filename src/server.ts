@@ -11,7 +11,7 @@ import {  ServerConfig, ServerMessage, LogLevel } from '@gateway/enum';
 import { securityMiddleware } from '@gateway/server-configuration/security';
 import { swaggerConfiguration } from '@gateway/server-configuration/swagger';
 import { errorHandler } from '@gateway/server-configuration/errorHandler';
-
+import { elasticSearch } from '@gateway/elasticsearch';
 
 export const SERVER_PORT = 4000;
 export const DEFAULT_ERROR_CODE = 500;
@@ -28,11 +28,17 @@ export class Server {
 
   public start(): void {
     this.security(this.app);
+    this.startElasticSearch();
     this.standardMiddleware(this.app);
     this.swaggerConfig(this.app);
     this.routesMiddleware(this.app);
     this.errorHandler(this.app);
     this.startServer(this.app);
+  }
+
+
+  private startElasticSearch(): void {
+    elasticSearch.checkConnection();
   }
 
   private security(app: Application): void {
