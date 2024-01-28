@@ -21,6 +21,9 @@ RUN npm install --only=production
 # Copy the compiled JavaScript from the builder stage
 COPY --from=builder /app/build ./build
 
+# Copy .env file
+COPY .env ./
+
 # Expose the port the app runs on
 EXPOSE 4000
 

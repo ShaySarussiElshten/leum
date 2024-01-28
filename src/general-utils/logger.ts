@@ -5,37 +5,62 @@ import {
   LogData,
   TransformedData }
   from 'winston-elasticsearch';
+import TransportStream from 'winston-transport';
+import { config } from '@gateway/config';
 
 const esTransformer = (logData: LogData): TransformedData => {
   return ElasticsearchTransformer(logData);
 };
 
 export const winstonLogger = (elasticsearchNode: string, name: string, level: string): Logger => {
-  const options = {
-    console: {
-      level,
-      handleExceptions: true,
-      json: false,
-      colorize: true,
-    },
-    elasticsearch: {
-      level,
-      transformer: esTransformer,
-      clientOpts: {
-        node: elasticsearchNode,
-        log: level,
-        maxRetries: 2,
-        requestTimeout: 10000,
-        sniffOnStart: false,
-      },
-    },
-  };
-  const esTransport: ElasticsearchTransport = new ElasticsearchTransport(options.elasticsearch);
-  const logger: Logger = winston.createLogger({
-    exitOnError: false,
-    defaultMeta: { service: name },
-    transports: [new winston.transports.Console(options.console), esTransport],
-  });
+
+  let logger: Logger
+
+  if(config.IS_ELASTIC_CONFIGURED){
+      const options = {
+        console: {
+          level,
+          handleExceptions: true,
+          json: false,
+          colorize: true,
+        },
+        elasticsearch: {
+          level,
+          transformer: esTransformer,
+          clientOpts: {
+            node: elasticsearchNode,
+            log: level,
+            maxRetries: 2,
+            requestTimeout: 10000,
+            sniffOnStart: false,
+          },
+        },
+      };
+      const esTransport: ElasticsearchTransport = new ElasticsearchTransport(options.elasticsearch);
+      logger = winston.createLogger({
+        exitOnError: false,
+        defaultMeta: { service: name },
+        transports: [new winston.transports.Console(options.console), esTransport],
+      });
+    }else{
+      const consoleTransportOptions = {
+        level,
+       handleExceptions: true,
+       json: false,
+       colorize: true,
+      };
+
+      const transports: TransportStream[] = [new winston.transports.Console(consoleTransportOptions)]
+
+      logger = winston.createLogger({
+              exitOnError: false,
+              defaultMeta: { service: name },
+              transports: transports,
+      });
+    }
+
+
+
   
   return logger;
 };
