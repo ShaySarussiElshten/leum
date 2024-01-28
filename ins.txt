@@ -5,8 +5,44 @@
 
 
  ////////
- 
- 
+
+
+ minikube delete --all --purge 
+
+ minikube start 
+
+ minikube start --alsologtostderr -v=7
+
+  minikube config set memory 7000
+
+
+ //docker push last img :
+
+docker build -t shay88/ts-app:latest .
+
+docker tag shay88/ts-app:latest shay88/ts-app:othertag
+
+docker push shay88/ts-app:latest
+
+
+when you push the docker image 
+dont forget to push the docker hub..!!!
+
+
+// kubectl:
+
+
+kubectl apply -f app-deployment.yaml      
+kubectl apply -f app-service.yaml
+
+kubectl apply -f db-claim0-persistentvolumeclaim.yaml      
+kubectl apply -f db-deployment.yaml 
+kubectl apply -f db-service.yaml 
+
+
+kubectl apply -f elasticsearch-deployment.yaml
+kubectl apply -f elasticsearch-service.yaml
+
 
 
 
